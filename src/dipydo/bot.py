@@ -55,7 +55,6 @@ class Pomodoro(commands.Cog):
                 raise Exception(f"{author}'s session has been canceled")
 
             if focus_phases == max_focus:
-                print(self.active_sessions)
                 await ctx.respond(f"{author} Begin focus!")
             else:
                 await ctx.send(f"{author} Begin focus!")

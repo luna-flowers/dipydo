@@ -2,6 +2,7 @@ import discord
 import os
 import time
 import asyncio
+import datetime as dt
 
 
 from discord.commands import Option
@@ -32,15 +33,13 @@ class Pomodoro(commands.Cog):
         break_length: Option(int, break_description, default=5),
         focus_phases: Option(int, focus_ph_description, default=2),
     ):
-
         author = ctx.author.mention
 
         focus_min = focus_length * 60
         break_min = break_length * 60
 
         if author in self.active_sessions:
-            await ctx.respond(f"{author} already has an active session",
-                              ephemeral=True)
+            await ctx.respond(f"{author} already has an active session", ephemeral=True)
 
         # Logical start of pomodoro session
         self.active_sessions[author] = (time.time(), focus_phases)
@@ -54,10 +53,13 @@ class Pomodoro(commands.Cog):
             if author not in self.active_sessions:
                 raise Exception(f"{author}'s session has been canceled")
 
+            focus_end = dt.datetime.now() + dt.timedelta(minutes=focus_length)
+            focus_end_time = focus_end.strftime("%I:%M %p")
+
             if focus_phases == max_focus:
-                await ctx.respond(f"{author} Begin focus!")
+                await ctx.respond(f"{author} Begin focus! End at {focus_end_time}")
             else:
-                await ctx.send(f"{author} Begin focus!")
+                await ctx.send(f"{author} Begin focus! End at {focus_end_time}")
 
             focus_phases -= 1
             await asyncio.sleep(focus_min)
@@ -66,11 +68,14 @@ class Pomodoro(commands.Cog):
                 raise Exception(f"{author}'s session has been canceled")
 
             if focus_phases >= 1:
-                await ctx.send(f"{author} Break time")
+                break_end = dt.datetime.now() + dt.timedelta(minutes=break_length)
+                break_end_time = break_end.strftime("%I:%M %p")
+
+                await ctx.send(f"{author} Break time! End at {break_end_time}")
+
                 await asyncio.sleep(break_min)
             elif focus_phases == 0:
-                await ctx.send(
-                    f"{author} Session complete. You're free now!")
+                await ctx.send(f"{author} Session complete. You're free now!")
                 del self.active_sessions[author]
 
         focus.start(self)
@@ -83,8 +88,7 @@ class Pomodoro(commands.Cog):
             del self.active_sessions[author]
             await ctx.respond("Your active session has been ended")
         else:
-            await ctx.respond("You don't have an active session to end",
-                              ephemeral=True)
+            await ctx.respond("You don't have an active session to end", ephemeral=True)
 
 
 load_dotenv()
